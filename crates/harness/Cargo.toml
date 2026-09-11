@@ -1,0 +1,18 @@
+[package]
+name = "soroban-invariant-kit-harness"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Test harness, runner, and proptest/cargo-fuzz glue for soroban-invariant-kit"
+
+[dependencies]
+soroban-invariant-kit-core = { workspace = true }
+proptest = { workspace = true }
+arbitrary = { workspace = true, optional = true }
+thiserror = { workspace = true }
+
+[features]
+default = []
+arbitrary = ["dep:arbitrary"]

@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/harness",
+    "examples/counter",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.84.0"
+license = "MIT OR Apache-2.0"
+authors = ["Stephan <stephan@example.com>"]
+repository = "https://github.com/Stephan-Thomas/soroban-invariant-kit"
+
+[workspace.dependencies]
+soroban-sdk = { version = "22.0.11", features = ["testutils"] }
+proptest = { version = "1.5" }
+proptest-derive = { version = "0.5" }
+arbitrary = { version = "~1.3.0", features = ["derive"] }
+thiserror = { version = "1.0" }
+soroban-invariant-kit-core = { path = "crates/core" }
+soroban-invariant-kit-harness = { path = "crates/harness" }
