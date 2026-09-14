@@ -395,13 +395,11 @@ impl<A: SplitAdapter> Invariant<A> for NoDuplicatePayout {
         for r_after in &after_split.recipients {
             if let Some(r_before) = before_split.recipients.iter().find(|r| r.recipient == r_after.recipient) {
                 let claim_delta = r_after.total_claimed - r_before.total_claimed;
-                if claim_delta > 0 {
-                    if claim_delta > r_before.unclaimed_balance {
-                        return InvariantResult::violation(format!(
-                            "Recipient {} claimed {} which exceeds prior unclaimed balance {}",
-                            r_after.recipient, claim_delta, r_before.unclaimed_balance
-                        ));
-                    }
+                if claim_delta > 0 && claim_delta > r_before.unclaimed_balance {
+                    return InvariantResult::violation(format!(
+                        "Recipient {} claimed {} which exceeds prior unclaimed balance {}",
+                        r_after.recipient, claim_delta, r_before.unclaimed_balance
+                    ));
                 }
             }
         }

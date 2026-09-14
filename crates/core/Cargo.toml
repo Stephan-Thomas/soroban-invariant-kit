@@ -6,6 +6,9 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Core adapter traits, invariant definitions, and reporting for soroban-invariant-kit"
+readme = "../../README.md"
+keywords = ["stellar", "soroban", "invariant-testing", "fuzzing", "smart-contracts"]
+categories = ["development-tools::testing", "cryptography::cryptocurrencies"]
 
 [dependencies]
 thiserror = { workspace = true }

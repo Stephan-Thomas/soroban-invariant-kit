@@ -384,19 +384,36 @@ invariant_test!(
 
 ---
 
+## Comparison: Invariant Testing vs. Existing Approaches
+
+| Feature | Unit Testing (`soroban-sdk::testutils`) | Byte-Level Fuzzing (`cargo-fuzz`) | **`soroban-invariant-kit`** |
+| :--- | :--- | :--- | :--- |
+| **Scope** | Single happy/error paths | Crash & panic discovery | **Multi-contract state machine transitions** |
+| **Cross-Contract Flows**| Manual single-scenario scripts | Fails deserialization / auth | **Native multi-contract adapters (`ContractAdapter`)** |
+| **Financial Conservation**| Manual individual assertions | None (silent leaks go unnoticed) | **Continuous balance, solvency, & single-release oracles** |
+| **Counterexample Minimization**| None | Byte-level minimization | **Semantic action sequence shrinking with full trace** |
+| **Turnkey Invariant Packs**| None | None | **Pre-built suites for Escrow, Streaming, & Split Payments** |
+
+*For a comprehensive technical breakdown and real-world case studies, see [docs/COMPARISONS.md](file:///docs/COMPARISONS.md).*
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Scaffolding & Design** (Core adapter traits, Invariant definitions, Test harness, Counter minimal working example, Architecture guide, CI)
 - [x] **Phase 2: Escrow Invariant Pack** (Total locked == milestones - released - refunded, no double release, dispute freeze, public fixture validation, bug discovery & fix)
 - [x] **Phase 3: Streaming Invariant Pack** (Accrual bounding, balance conservation, terminal claim checks, monotonic progress, StreamPay fixture validation)
 - [x] **Phase 4: Split-Payment Invariant Pack** (Share sum == 100%, payout <= input, duplicate payout guards, solvency checks, split benchmark fixture)
-- [ ] **Phase 5: Polish & Documentation** (Worked examples, adapter guidelines, comparisons with single-contract fuzzers)
+- [x] **Phase 5: Polish & Documentation** (Worked examples, adapter guidelines, comparisons with single-contract fuzzers, v0.1.0 release)
 
 ---
 
-## Documentation
+## Documentation & Guides
 
-For a deep dive into how adapters work, see [ARCHITECTURE.md](file:///ARCHITECTURE.md).
+- [Architecture & Design Guide](file:///ARCHITECTURE.md): Deep dive into adapter traits, state traces, and runner execution models.
+- [Adapter Implementation Guidelines](file:///docs/ADAPTER_GUIDELINES.md): Step-by-step handbook for building custom Soroban contract adapters.
+- [Comparative Analysis](file:///docs/COMPARISONS.md): In-depth comparison of invariant testing vs. unit tests and raw fuzzers.
+- [Changelog](file:///CHANGELOG.md): Version release history and milestone tracking.
 
 ## License
 

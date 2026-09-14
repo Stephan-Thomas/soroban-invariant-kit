@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Phase 4: Split-Payment Invariant Pack
+## [0.1.0] - 2026-09-14: Initial Production Release
+
+Consolidating the initial release of `soroban-invariant-kit`, featuring multi-contract invariant testing, property-based fuzzing, counterexample shrinking, and 3 turnkey domain invariant packs.
+
+### Phase 5: Polish & Documentation
+- **Comparative Analysis** (`docs/COMPARISONS.md`): Technical comparison of invariant testing vs. unit tests and raw byte fuzzers.
+- **Adapter Guidelines** (`docs/ADAPTER_GUIDELINES.md`): Step-by-step developer handbook for writing custom Soroban adapters.
+- **Workspace Packaging**: Enhanced crate metadata (keywords, categories, documentation, and readme links) for crates.io readiness.
+- **Tagged Release**: Tagged `v0.1.0`.
+
+---
+
+## [Phase 4] - Split-Payment Invariant Pack
 
 ### Added
 - **Split-Payment Domain Trait & State Snapshots** (`soroban-invariant-kit-core::split`):

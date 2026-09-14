@@ -465,13 +465,14 @@ impl<A: StreamingAdapter> Invariant<A> for StreamingMonotonicProgress {
                 if s_before.status == StreamStatusKind::Active {
                     if let Some(s_after) = after_streaming.streams.iter().find(|s| s.id == s_before.id) {
                         // If stream remains active and end_time wasn't shortened
-                        if s_after.status == StreamStatusKind::Active && s_after.end_time >= s_before.end_time {
-                            if s_after.accrued_vested < s_before.accrued_vested {
-                                return InvariantResult::violation(format!(
-                                    "Monotonicity violation on stream {}: accrued_vested decreased from {} to {} despite time advancing from {} to {}",
-                                    s_before.id, s_before.accrued_vested, s_after.accrued_vested, before_streaming.timestamp, after_streaming.timestamp
-                                ));
-                            }
+                        if s_after.status == StreamStatusKind::Active
+                            && s_after.end_time >= s_before.end_time
+                            && s_after.accrued_vested < s_before.accrued_vested
+                        {
+                            return InvariantResult::violation(format!(
+                                "Monotonicity violation on stream {}: accrued_vested decreased from {} to {} despite time advancing from {} to {}",
+                                s_before.id, s_before.accrued_vested, s_after.accrued_vested, before_streaming.timestamp, after_streaming.timestamp
+                            ));
                         }
                     }
                 }

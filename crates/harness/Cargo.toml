@@ -6,6 +6,9 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 description = "Test harness, runner, and proptest/cargo-fuzz glue for soroban-invariant-kit"
+readme = "../../README.md"
+keywords = ["stellar", "soroban", "invariant-testing", "fuzzing", "smart-contracts"]
+categories = ["development-tools::testing", "cryptography::cryptocurrencies"]
 
 [dependencies]
 soroban-invariant-kit-core = { workspace = true }
