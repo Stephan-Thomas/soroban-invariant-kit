@@ -5,6 +5,7 @@ members = [
     "crates/harness",
     "examples/counter",
     "examples/escrow",
+    "examples/streaming",
 ]
 
 [workspace.package]

@@ -15,6 +15,7 @@ pub mod error;
 pub mod escrow;
 pub mod invariant;
 pub mod report;
+pub mod streaming;
 pub mod transition;
 
 pub use adapter::{ActionResult, ContractAdapter};
@@ -26,6 +27,11 @@ pub use escrow::{
 };
 pub use invariant::{Invariant, InvariantResult, InvariantSet, InvariantViolation};
 pub use report::InvariantViolationReport;
+pub use streaming::{
+    streaming_invariant_pack, ClaimableNeverExceedsAccrual, NoClaimAfterCloseOrCancel,
+    StreamSnapshot, StreamStatusKind, StreamingActionKind, StreamingAdapter,
+    StreamingBalanceConservation, StreamingMonotonicProgress, StreamingStateSnapshot,
+};
 pub use transition::{StepRecord, Trace};
 
 /// Prelude containing commonly used traits and types.
@@ -39,5 +45,10 @@ pub mod prelude {
     };
     pub use crate::invariant::{Invariant, InvariantResult, InvariantSet, InvariantViolation};
     pub use crate::report::InvariantViolationReport;
+    pub use crate::streaming::{
+        streaming_invariant_pack, ClaimableNeverExceedsAccrual, NoClaimAfterCloseOrCancel,
+        StreamSnapshot, StreamStatusKind, StreamingActionKind, StreamingAdapter,
+        StreamingBalanceConservation, StreamingMonotonicProgress, StreamingStateSnapshot,
+    };
     pub use crate::transition::{StepRecord, Trace};
 }

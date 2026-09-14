@@ -43,6 +43,13 @@ impl InvariantResult {
             details: Some(details.into()),
         }
     }
+
+    pub fn reason(&self) -> Option<&str> {
+        match self {
+            InvariantResult::Pass => None,
+            InvariantResult::Violation { reason, .. } => Some(reason.as_str()),
+        }
+    }
 }
 
 /// A safety or financial invariant evaluated against an adapter.

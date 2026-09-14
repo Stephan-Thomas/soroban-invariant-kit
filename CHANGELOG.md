@@ -5,7 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Phase 2: Escrow Invariant Pack
+## [Unreleased] - Phase 3: Streaming Invariant Pack
+
+### Added
+- **Streaming Domain Trait & State Snapshots** (`soroban-invariant-kit-core::streaming`):
+  - [`StreamingAdapter`]: Domain trait extending `ContractAdapter` with normalized state inspection (`inspect_streaming`) and action classification (`classify_action`).
+  - [`StreamingStateSnapshot`]: Normalized snapshot capturing `timestamp`, `streams`, `total_deposited`, `total_withdrawn`, `total_refunded`, and `contract_token_balance`.
+  - [`StreamSnapshot`]: Per-stream snapshot tracking total escrowed, cumulative withdrawn, remaining escrow balance, sender refunded amount, start/end timestamps, lifecycle status, and accrued mathematical vesting.
+  - [`StreamStatusKind`]: Standard lifecycle statuses (`Active`, `Cancelled`, `Completed`).
+  - [`StreamingActionKind`]: Standard streaming operations (`CreateStream`, `Withdraw`, `Cancel`, `TopUp`, `Extend`, `AdvanceTime`).
+- **Streaming Invariant Pack**:
+  - [`ClaimableNeverExceedsAccrual`]: Asserts that cumulative claimed funds never exceed time-based vested accrual, and incremental withdrawal deltas cannot exceed available withdrawable amounts.
+  - [`StreamingBalanceConservation`]: Enforces mathematical balance conservation ($\text{Total Deposited} = \text{Withdrawn} + \text{Remaining} + \text{Refunded}$) both per-stream and globally, and verifies token solvency ($\text{Contract Token Balance} \ge \sum \text{Remaining}$).
+  - [`NoClaimAfterCloseOrCancel`]: Guarantees that once a stream is cancelled or completed, no additional funds can be withdrawn or claimed.
+  - [`StreamingMonotonicProgress`]: Enforces that vesting progress is monotonically non-decreasing over forward-moving ledger time.
+  - [`streaming_invariant_pack`]: Turnkey builder bundling all 4 streaming invariants into an `InvariantSet`.
+- **StreamPay Fixture & Benchmark Example** (`examples/streaming`):
+  - Integrated public streaming smart contract based on [`StreamPay-Organization/StreamPay-Contracts`](https://github.com/StreamPay-Organization/StreamPay-Contracts) (pinned to `soroban-sdk = "22.0.11"`) with formal attribution in `ATTRIBUTION.md`.
+  - [`StreamingContractAdapter`]: Concrete adapter wiring `StreamPayContract` and SAC token contract to `StreamingAdapter`.
+  - Property-based testing suite with `proptest`:
+    - `test_streaming_invariants_hold`: 100 randomized property-testing sequences validating all 4 streaming invariants under arbitrary time advances and multi-stream interactions.
+    - `test_detects_claim_exceeding_accrual_violation`: Negative test verifying detection of withdrawals exceeding accrued vesting.
+    - `test_detects_withdrawal_after_cancel_violation`: Negative test asserting rejection and invariant violation on post-cancel withdrawals.
+    - `test_detects_balance_insolvency_violation`: Negative test verifying contract token balance insolvency and per-stream balance mismatch detection.
+    - `test_streaming_monotonic_progress_holds`: Test verifying monotonic vesting progress under advancing ledger time.
+- **Documentation**:
+  - Updated `README.md` with worked payment streaming invariant example and updated roadmap.
+
+---
+
+## [Phase 2] - Escrow Invariant Pack
 
 ### Added
 - **Escrow Domain Trait & State Snapshots** (`soroban-invariant-kit-core::escrow`):

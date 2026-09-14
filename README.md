@@ -267,11 +267,68 @@ When property-fuzzing the original public contract, `soroban-invariant-kit` unco
 
 ---
 
+## Worked Example: Payment Streaming Invariant Pack
+
+Available in [examples/streaming](file:///examples/streaming), based on the linear payment streaming architecture from [`StreamPay-Organization/StreamPay-Contracts`](https://github.com/StreamPay-Organization/StreamPay-Contracts):
+
+### 1. The Invariant Pack
+`soroban-invariant-kit` provides `streaming_invariant_pack<A>()` which automatically asserts:
+- **`ClaimableNeverExceedsAccrual`**: $\text{Withdrawn} \le \text{Accrued Vested} \le \text{Total Deposit}$. Withdrawn deltas can never exceed the newly vested accrual.
+- **`StreamingBalanceConservation`**: $\text{Total Deposited} = \text{Withdrawn} + \text{Remaining} + \text{Refunded}$ (per-stream and globally), with strict token solvency verification ($\text{Contract Token Balance} \ge \sum \text{Remaining}$).
+- **`NoClaimAfterCloseOrCancel`**: Once a stream is marked `Cancelled` or `Completed`, no further withdrawals may occur.
+- **`StreamingMonotonicProgress`**: As ledger timestamps advance, accrued vesting is monotonically non-decreasing ($\text{Accrued Vested}_{t_2} \ge \text{Accrued Vested}_{t_1}$).
+
+### 2. Plugging in a Streaming Adapter
+Contract authors implement [`StreamingAdapter`](file:///crates/core/src/streaming.rs):
+
+```rust
+use soroban_invariant_kit_core::streaming::{
+    StreamingActionKind, StreamingAdapter, StreamingStateSnapshot, StreamSnapshot, StreamStatusKind,
+};
+use soroban_invariant_kit_core::ContractAdapter;
+
+impl StreamingAdapter for MyStreamingAdapter {
+    fn inspect_streaming(state: &Self::State) -> StreamingStateSnapshot {
+        state.snapshot.clone()
+    }
+
+    fn classify_action(action: &Self::Action) -> Option<StreamingActionKind> {
+        match action {
+            MyAction::CreateStream { amount, duration } => Some(StreamingActionKind::CreateStream {
+                id: 0,
+                amount: *amount,
+                start_time: 0,
+                end_time: *duration,
+            }),
+            MyAction::Withdraw { id } => Some(StreamingActionKind::Withdraw { id: *id, amount: 0 }),
+            MyAction::Cancel { id } => Some(StreamingActionKind::Cancel { id: *id }),
+            _ => None,
+        }
+    }
+}
+```
+
+### 3. Fuzzing with `invariant_test!`
+```rust
+use soroban_invariant_kit_core::streaming::streaming_invariant_pack;
+use soroban_invariant_kit_harness::invariant_test;
+
+invariant_test!(
+    test_streaming_invariants_hold,
+    StreamingContractAdapter,
+    proptest::collection::vec(arb_streaming_action(), 1..25),
+    streaming_invariant_pack::<StreamingContractAdapter>(),
+    100 // 100 randomized action sequences
+);
+```
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Scaffolding & Design** (Core adapter traits, Invariant definitions, Test harness, Counter minimal working example, Architecture guide, CI)
 - [x] **Phase 2: Escrow Invariant Pack** (Total locked == milestones - released - refunded, no double release, dispute freeze, public fixture validation, bug discovery & fix)
-- [ ] **Phase 3: Streaming Invariant Pack** (Accrual bounding, balance conservation, terminal claim checks)
+- [x] **Phase 3: Streaming Invariant Pack** (Accrual bounding, balance conservation, terminal claim checks, monotonic progress, StreamPay fixture validation)
 - [ ] **Phase 4: Split-Payment Invariant Pack** (Share sum == 100%, payout <= input, duplicate payout guards)
 - [ ] **Phase 5: Polish & Documentation** (Worked examples, adapter guidelines, comparisons with single-contract fuzzers)
 
