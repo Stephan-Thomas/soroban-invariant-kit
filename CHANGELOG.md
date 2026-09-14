@@ -5,7 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Phase 3: Streaming Invariant Pack
+## [Unreleased] - Phase 4: Split-Payment Invariant Pack
+
+### Added
+- **Split-Payment Domain Trait & State Snapshots** (`soroban-invariant-kit-core::split`):
+  - [`SplitAdapter`]: Domain trait extending `ContractAdapter` with normalized state inspection (`inspect_split`) and action classification (`classify_action`).
+  - [`SplitStateSnapshot`]: Normalized snapshot capturing `total_shares_bps`, `recipients`, `batches`, `total_deposited`, `total_distributed`, `total_dust`, and `contract_token_balance`.
+  - [`RecipientShareSnapshot`]: Per-recipient snapshot tracking share basis points, cumulative tokens allocated, cumulative claimed, and unclaimed balance.
+  - [`SplitBatchSnapshot`]: Per-batch snapshot tracking total deposit, distributed amount, unallocated dust, and distribution status.
+  - [`SplitActionKind`]: Standard split actions (`ConfigureShares`, `DepositAndSplit`, `ClaimShare`, `DistributeBatch`).
+- **Split Invariant Pack**:
+  - [`ShareSumConservation`]: Asserts that recipient percentage shares strictly sum to 10,000 basis points (100.00%) at all times.
+  - [`SplitPayoutConservation`]: Verifies that distributed payouts plus unallocated dust strictly equal incoming deposits ($\text{Total Deposited} = \text{Distributed} + \text{Dust} + \sum \text{Unclaimed}$) and payouts never exceed deposits.
+  - [`NoDuplicatePayout`]: Guarantees that finalized split batches cannot be distributed twice and recipients cannot claim more than their cumulative allocated entitlement ($\text{Claimed} \le \text{Allocated}$).
+  - [`SplitSolvency`]: Enforces that the contract token balance strictly covers all outstanding liabilities ($\text{Contract Token Balance} \ge \sum \text{Unclaimed} + \text{Total Dust}$).
+  - [`split_invariant_pack`]: Turnkey builder bundling all 4 split-payment invariants into an `InvariantSet`.
+- **Split-Payment Fixture & Benchmark Example** (`examples/split`):
+  - Self-contained basis-point payment splitting smart contract inspired by [`stellar-split/split-contracts`](https://github.com/stellar-split/split-contracts) with formal attribution in `ATTRIBUTION.md`.
+  - [`SplitContractAdapter`]: Concrete adapter wiring `SplitContract` and SAC token contract to `SplitAdapter`.
+  - Property-based testing suite with `proptest`:
+    - `test_split_invariants_hold`: 100 randomized property-testing sequences validating all 4 split invariants under arbitrary multi-party deposits, share updates, and claims.
+    - `test_detects_share_sum_violation`: Negative test verifying detection of invalid share sum basis points.
+    - `test_detects_payout_conservation_violation`: Negative test asserting detection if payouts exceed incoming deposits.
+    - `test_detects_duplicate_payout_violation`: Negative test asserting detection if a batch is re-distributed or over-claimed.
+    - `test_detects_solvency_violation`: Negative test verifying token balance shortfall detection.
+- **Documentation**:
+  - Updated `README.md` with worked split-payment invariant example and roadmap update.
+
+---
+
+## [Phase 3] - Streaming Invariant Pack
 
 ### Added
 - **Streaming Domain Trait & State Snapshots** (`soroban-invariant-kit-core::streaming`):

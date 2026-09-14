@@ -324,12 +324,72 @@ invariant_test!(
 
 ---
 
+## Worked Example: Split-Payment Invariant Pack
+
+Available in [examples/split](file:///examples/split), inspired by the basis-point proportional splitting and revenue-sharing patterns from [`stellar-split/split-contracts`](https://github.com/stellar-split/split-contracts):
+
+### 1. The Invariant Pack
+`soroban-invariant-kit` provides `split_invariant_pack<A>()` which automatically asserts:
+- **`ShareSumConservation`**: The sum of configured recipient shares must strictly equal 10,000 basis points (100.00%): $\sum \text{share\_bps} == 10,000$. Under-allocation (lost funds) or over-allocation (insolvency) is flagged immediately.
+- **`SplitPayoutConservation`**: $\text{Total Deposited} = \text{Distributed} + \text{Dust} + \sum \text{Unclaimed}$. Per-batch payouts plus unallocated dust strictly equal the incoming deposit, and payouts never exceed deposits.
+- **`NoDuplicatePayout`**: Finalized split batches cannot be paid out twice, and recipients cannot claim more than their cumulative allocated entitlement ($\text{Claimed} \le \text{Allocated}$).
+- **`SplitSolvency`**: The contract token balance must at all times cover all outstanding unclaimed balances and unallocated dust ($\text{Contract Token Balance} \ge \sum \text{Unclaimed} + \text{Total Dust}$).
+
+### 2. Plugging in a Split Adapter
+Contract authors implement [`SplitAdapter`](file:///crates/core/src/split.rs):
+
+```rust
+use soroban_invariant_kit_core::split::{
+    RecipientShareSnapshot, SplitActionKind, SplitAdapter, SplitBatchSnapshot, SplitStateSnapshot,
+};
+use soroban_invariant_kit_core::ContractAdapter;
+
+impl SplitAdapter for MySplitAdapter {
+    fn inspect_split(state: &Self::State) -> SplitStateSnapshot {
+        state.snapshot.clone()
+    }
+
+    fn classify_action(action: &Self::Action) -> Option<SplitActionKind> {
+        match action {
+            MyAction::DepositAndSplit { amount } => Some(SplitActionKind::DepositAndSplit {
+                batch_id: 0,
+                amount: *amount,
+            }),
+            MyAction::Claim { recipient_idx } => Some(SplitActionKind::ClaimShare {
+                recipient: format!("{}", recipient_idx),
+                amount: 0,
+            }),
+            MyAction::UpdateShares { shares_bps } => {
+                Some(SplitActionKind::ConfigureShares { total_bps: shares_bps.iter().sum() })
+            }
+            _ => None,
+        }
+    }
+}
+```
+
+### 3. Fuzzing with `invariant_test!`
+```rust
+use soroban_invariant_kit_core::split::split_invariant_pack;
+use soroban_invariant_kit_harness::invariant_test;
+
+invariant_test!(
+    test_split_invariants_hold,
+    SplitContractAdapter,
+    proptest::collection::vec(arb_split_action(), 1..25),
+    split_invariant_pack::<SplitContractAdapter>(),
+    100 // 100 randomized action sequences
+);
+```
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Scaffolding & Design** (Core adapter traits, Invariant definitions, Test harness, Counter minimal working example, Architecture guide, CI)
 - [x] **Phase 2: Escrow Invariant Pack** (Total locked == milestones - released - refunded, no double release, dispute freeze, public fixture validation, bug discovery & fix)
 - [x] **Phase 3: Streaming Invariant Pack** (Accrual bounding, balance conservation, terminal claim checks, monotonic progress, StreamPay fixture validation)
-- [ ] **Phase 4: Split-Payment Invariant Pack** (Share sum == 100%, payout <= input, duplicate payout guards)
+- [x] **Phase 4: Split-Payment Invariant Pack** (Share sum == 100%, payout <= input, duplicate payout guards, solvency checks, split benchmark fixture)
 - [ ] **Phase 5: Polish & Documentation** (Worked examples, adapter guidelines, comparisons with single-contract fuzzers)
 
 ---

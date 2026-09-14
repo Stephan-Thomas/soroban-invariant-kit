@@ -6,6 +6,7 @@ members = [
     "examples/counter",
     "examples/escrow",
     "examples/streaming",
+    "examples/split",
 ]
 
 [workspace.package]

@@ -646,6 +646,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-split"
+version = "0.1.0"
+dependencies = [
+ "proptest",
+ "soroban-invariant-kit-core",
+ "soroban-invariant-kit-harness",
+ "soroban-sdk",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "example-streaming"
 version = "0.1.0"
 dependencies = [

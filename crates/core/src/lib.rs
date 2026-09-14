@@ -15,6 +15,7 @@ pub mod error;
 pub mod escrow;
 pub mod invariant;
 pub mod report;
+pub mod split;
 pub mod streaming;
 pub mod transition;
 
@@ -27,6 +28,11 @@ pub use escrow::{
 };
 pub use invariant::{Invariant, InvariantResult, InvariantSet, InvariantViolation};
 pub use report::InvariantViolationReport;
+pub use split::{
+    split_invariant_pack, NoDuplicatePayout, RecipientShareSnapshot, ShareSumConservation,
+    SplitActionKind, SplitAdapter, SplitBatchSnapshot, SplitPayoutConservation, SplitSolvency,
+    SplitStateSnapshot, TOTAL_SHARE_BPS,
+};
 pub use streaming::{
     streaming_invariant_pack, ClaimableNeverExceedsAccrual, NoClaimAfterCloseOrCancel,
     StreamSnapshot, StreamStatusKind, StreamingActionKind, StreamingAdapter,
@@ -45,6 +51,11 @@ pub mod prelude {
     };
     pub use crate::invariant::{Invariant, InvariantResult, InvariantSet, InvariantViolation};
     pub use crate::report::InvariantViolationReport;
+    pub use crate::split::{
+        split_invariant_pack, NoDuplicatePayout, RecipientShareSnapshot, ShareSumConservation,
+        SplitActionKind, SplitAdapter, SplitBatchSnapshot, SplitPayoutConservation, SplitSolvency,
+        SplitStateSnapshot, TOTAL_SHARE_BPS,
+    };
     pub use crate::streaming::{
         streaming_invariant_pack, ClaimableNeverExceedsAccrual, NoClaimAfterCloseOrCancel,
         StreamSnapshot, StreamStatusKind, StreamingActionKind, StreamingAdapter,
