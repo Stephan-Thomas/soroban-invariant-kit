@@ -12,12 +12,18 @@
 
 pub mod adapter;
 pub mod error;
+pub mod escrow;
 pub mod invariant;
 pub mod report;
 pub mod transition;
 
 pub use adapter::{ActionResult, ContractAdapter};
 pub use error::KitError;
+pub use escrow::{
+    escrow_invariant_pack, DisputeFreezeCannotBeBypassed, EscrowActionKind, EscrowAdapter,
+    EscrowStateSnapshot, MilestoneSnapshot, MilestoneStatusKind, NoDoubleRelease,
+    NoReleaseWithoutApproval, TotalLockedConservation,
+};
 pub use invariant::{Invariant, InvariantResult, InvariantSet, InvariantViolation};
 pub use report::InvariantViolationReport;
 pub use transition::{StepRecord, Trace};
@@ -26,6 +32,11 @@ pub use transition::{StepRecord, Trace};
 pub mod prelude {
     pub use crate::adapter::{ActionResult, ContractAdapter};
     pub use crate::error::KitError;
+    pub use crate::escrow::{
+        escrow_invariant_pack, DisputeFreezeCannotBeBypassed, EscrowActionKind, EscrowAdapter,
+        EscrowStateSnapshot, MilestoneSnapshot, MilestoneStatusKind, NoDoubleRelease,
+        NoReleaseWithoutApproval, TotalLockedConservation,
+    };
     pub use crate::invariant::{Invariant, InvariantResult, InvariantSet, InvariantViolation};
     pub use crate::report::InvariantViolationReport;
     pub use crate::transition::{StepRecord, Trace};

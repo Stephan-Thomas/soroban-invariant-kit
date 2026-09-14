@@ -1,0 +1,16 @@
+[package]
+name = "example-escrow"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+soroban-invariant-kit-core = { workspace = true }
+soroban-invariant-kit-harness = { workspace = true }
+proptest = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

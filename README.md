@@ -196,10 +196,81 @@ Trace (Total steps: 2):
 
 ---
 
+## Worked Example: Escrow Invariant Pack
+
+Available in [examples/escrow](file:///examples/escrow), based on the real-world milestone escrow contract from [`probablyABug/escrow-contract`](https://github.com/probablyABug/escrow-contract):
+
+### 1. The Invariant Pack
+`soroban-invariant-kit` provides `escrow_invariant_pack<A>()` which automatically checks:
+- **`TotalLockedConservation`**: $\text{Total Locked} = \sum(\text{milestones}) - \sum(\text{released}) - \sum(\text{refunded})$, matching the SEP-41 token balance.
+- **`NoDoubleRelease`**: Milestones cannot be released twice or have releases exceed milestone limits.
+- **`NoReleaseWithoutApproval`**: Releases cannot occur unless the milestone was delivered / approved in prior state.
+- **`DisputeFreezeCannotBeBypassed`**: While a milestone or escrow is disputed, normal release operations are blocked.
+
+### 2. Plugging in an Escrow Adapter
+Contract authors implement [`EscrowAdapter`](file:///crates/core/src/escrow.rs):
+
+```rust
+use soroban_invariant_kit_core::escrow::{
+    EscrowActionKind, EscrowAdapter, EscrowStateSnapshot, MilestoneSnapshot, MilestoneStatusKind,
+};
+use soroban_invariant_kit_core::{ActionResult, ContractAdapter};
+
+impl EscrowAdapter for MyEscrowAdapter {
+    fn inspect_escrow(state: &Self::State) -> EscrowStateSnapshot {
+        EscrowStateSnapshot {
+            total_locked: state.token_balance,
+            total_released: state.total_released,
+            total_refunded: state.total_refunded,
+            is_funded: state.funded,
+            is_disputed: state.disputed,
+            milestones: state.milestones.clone(),
+            contract_token_balance: Some(state.token_balance),
+        }
+    }
+
+    fn classify_action(action: &Self::Action) -> Option<EscrowActionKind> {
+        match action {
+            MyAction::Fund => Some(EscrowActionKind::Fund { amount: 10_000 }),
+            MyAction::MarkDelivered { id } => Some(EscrowActionKind::MarkDelivered { milestone_id: *id }),
+            MyAction::Approve { id } => Some(EscrowActionKind::ApproveMilestone { milestone_id: *id }),
+            MyAction::Dispute { id } => Some(EscrowActionKind::RaiseDispute { milestone_id: *id }),
+            MyAction::Resolve { id, release } => Some(EscrowActionKind::ResolveDispute {
+                milestone_id: *id,
+                release_to_freelancer: *release,
+            }),
+            _ => None,
+        }
+    }
+}
+```
+
+### 3. Fuzzing with `invariant_test!`
+```rust
+use soroban_invariant_kit_core::escrow::escrow_invariant_pack;
+use soroban_invariant_kit_harness::invariant_test;
+
+invariant_test!(
+    test_escrow_invariants_hold,
+    EscrowContractAdapter,
+    proptest::collection::vec(arb_escrow_action(), 1..25),
+    escrow_invariant_pack::<EscrowContractAdapter>(),
+    100 // 100 randomized action sequences
+);
+```
+
+### 4. Real Bug Discovered & Fixed: Unfunded Dispute Vulnerability
+When property-fuzzing the original public contract, `soroban-invariant-kit` uncovered that `raise_dispute` and `resolve_dispute` lacked `meta.funded` precondition checks:
+- **Vulnerability**: A party could dispute an unfunded escrow, shifting milestone status to `Disputed` prior to token deposit. If `resolve_dispute(..., release_to_freelancer: false)` was subsequently called, the contract attempted to transfer refund tokens that were never deposited.
+- **Fix**: Enforced `if !meta.funded { return Err(Error::NotFunded); }` inside `raise_dispute` and `resolve_dispute`.
+- **Validation**: Tested with `test_detects_and_reproduces_unfunded_dispute_bug` reproducing the issue and proving the fix.
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1: Scaffolding & Design** (Core adapter traits, Invariant definitions, Test harness, Counter minimal working example, Architecture guide, CI)
-- [ ] **Phase 2: Escrow Invariant Pack** (Total locked == milestones - released - refunded, no double release, dispute freeze)
+- [x] **Phase 2: Escrow Invariant Pack** (Total locked == milestones - released - refunded, no double release, dispute freeze, public fixture validation, bug discovery & fix)
 - [ ] **Phase 3: Streaming Invariant Pack** (Accrual bounding, balance conservation, terminal claim checks)
 - [ ] **Phase 4: Split-Payment Invariant Pack** (Share sum == 100%, payout <= input, duplicate payout guards)
 - [ ] **Phase 5: Polish & Documentation** (Worked examples, adapter guidelines, comparisons with single-contract fuzzers)
